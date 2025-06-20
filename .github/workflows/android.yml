@@ -59,10 +59,20 @@ jobs:
           echo "keyAlias=${{ secrets.ANDROID_KEY_ALIAS }}" >> android/keystore.properties
           echo "keyPassword=${{ secrets.ANDROID_KEY_PASSWORD }}" >> android/keystore.properties
 
+      - name: Clean node_modules and reinstall
+        run: |
+          rm -rf node_modules
+          npm ci
+
+      - name: Clean Android build
+        run: |
+          cd android
+          ./gradlew clean
+
       - name: Build Android APK
         run: |
           cd android
-          ./gradlew clean assembleRelease
+          ./gradlew assembleRelease
 
       - name: Verify APK exists
         run: |
