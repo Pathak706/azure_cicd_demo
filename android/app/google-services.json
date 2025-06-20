@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1079550415658",
+    "project_id": "react-native-cicd-52dd5",
+    "storage_bucket": "react-native-cicd-52dd5.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1079550415658:android:a6e083b473e88ad025c453",
+        "android_client_info": {
+          "package_name": "net.techconsulting.rn_cicd_demo"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB50TU5QhiyEM_vg0krdNEGiDxyeqsW3J8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
