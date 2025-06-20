@@ -113,6 +113,17 @@ stages:
               jdkSourceOption: 'PreInstalled'
             displayName: 'Install Java'
 
+          - task: UseRubyVersion@0
+            inputs:
+              versionSpec: '3.x'
+              addToPath: true
+            displayName: 'Install Ruby'
+
+          - script: |
+              gem install bundler
+              gem install fastlane
+            displayName: 'Install Bundler and Fastlane'
+
           - task: DownloadSecureFile@1
             name: googleServicesJson
             inputs:
@@ -164,9 +175,9 @@ stages:
             displayName: 'Clean Android build'
 
           - script: |
+              # Run fastlane directly since we installed it globally
               cd android
-              bundle install
-              bundle exec fastlane beta
+              fastlane beta
             env:
               ANDROID_PACKAGE_NAME: '$(ANDROID_PACKAGE_NAME)'
               ANDROID_KEYSTORE_PATH: '../release.keystore'
