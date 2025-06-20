@@ -52,6 +52,24 @@ react {
 
     /* Autolinking */
     autolinkLibrariesWithApp()
+
+    // Create a minimal autolinking.json file if it doesn't exist
+    doFirst {
+        def autolinkDir = file("$buildDir/generated/autolinking")
+        if (!autolinkDir.exists()) {
+            autolinkDir.mkdirs()
+        }
+        def autolinkFile = file("$buildDir/generated/autolinking/autolinking.json")
+        if (!autolinkFile.exists()) {
+            autolinkFile.text = """
+{
+  "packageName": "net.techconsulting.rn_cicd_demo",
+  "applicationId": "net.techconsulting.rn_cicd_demo",
+  "libraries": []
+}
+"""
+        }
+    }
 }
 
 /**
