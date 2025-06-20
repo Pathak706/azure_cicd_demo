@@ -188,11 +188,11 @@ Our CI/CD pipelines include automatic version management:
   run: |
     # Get version from package.json
     VERSION=$(node -p "require('./package.json').version")
-    
+
     # Get current versionCode from build.gradle
     CURRENT_VERSION_CODE=$(grep -o "versionCode [0-9]*" android/app/build.gradle | awk '{print $2}')
     NEW_VERSION_CODE=$((CURRENT_VERSION_CODE + 1))
-    
+
     # Update versionName and versionCode in build.gradle
     sed -i "s/versionCode $CURRENT_VERSION_CODE/versionCode $NEW_VERSION_CODE/" android/app/build.gradle
     sed -i "s/versionName \"[^\"]*\"/versionName \"$VERSION\"/" android/app/build.gradle
@@ -231,7 +231,7 @@ Firebase App Distribution is used to distribute app builds to testers before rel
 #### Azure DevOps (via Fastlane):
 
 ```ruby
-sh("firebase appdistribution:distribute app/build/outputs/bundle/release/app-release.aab \
+sh("firebase appdistribution:distribute app/build/outputs/apk/release/app-release.apk \
   --app #{ENV["FIREBASE_APP_ID_ANDROID"]} \
   --testers #{ENV["FIREBASE_TESTERS"]} \
   --release-notes \"New beta build\" \

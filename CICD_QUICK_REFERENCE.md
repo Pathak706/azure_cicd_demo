@@ -196,10 +196,10 @@ Required files with exact names:
            }
        }
    }
-   
+
    // Make sure the autolinking.json file is created before any React Native tasks
    preBuild.dependsOn createAutolinkingJson
-   
+
    // Ensure generateAutolinkingNewArchitectureFiles task depends on createAutolinkingJson
    afterEvaluate {
        tasks.findByName('generateAutolinkingNewArchitectureFiles')?.dependsOn(createAutolinkingJson)
@@ -273,7 +273,7 @@ sed -i '' "s/CURRENT_PROJECT_VERSION = [^;]*/CURRENT_PROJECT_VERSION = $NEW_BUIL
 ### Azure DevOps (via Fastlane)
 
 ```ruby
-sh("firebase appdistribution:distribute app/build/outputs/bundle/release/app-release.aab \
+sh("firebase appdistribution:distribute app/build/outputs/apk/release/app-release.apk \
   --app #{ENV["FIREBASE_APP_ID_ANDROID"]} \
   --testers #{ENV["FIREBASE_TESTERS"]} \
   --release-notes \"New beta build\" \

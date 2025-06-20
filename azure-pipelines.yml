@@ -137,7 +137,7 @@ stages:
           - task: DownloadSecureFile@1
             name: androidKeystore
             inputs:
-              secureFile: 'my-release-key.keystore'
+              secureFile: 'my_app_release.keystore'
             displayName: 'Download Android keystore'
 
           - script: |
