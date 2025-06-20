@@ -189,21 +189,16 @@ Add the following secrets to your GitHub repository (Settings > Secrets and vari
 Create a variable group named `react-native-app-variables` in Azure DevOps (Pipelines > Library > Variable groups > + Variable group):
 
 #### iOS Variables
-- `IOS_P12_CERTIFICATE_FILENAME`: Filename of the p12 certificate uploaded to Secure Files
 - `IOS_P12_PASSWORD`: Password for the p12 certificate
 - `KEYCHAIN_PASSWORD`: Password for the temporary keychain
-- `IOS_PROVISIONING_PROFILE_FILENAME`: Filename of the provisioning profile uploaded to Secure Files
 - `APP_STORE_CONNECT_API_KEY_ID`: App Store Connect API Key ID
 - `APP_STORE_CONNECT_API_KEY_ISSUER_ID`: App Store Connect API Key Issuer ID
 - `APP_STORE_CONNECT_API_KEY_CONTENT`: App Store Connect API Key Content
 - `TEAM_ID`: Apple Developer Team ID
 - `IOS_BUNDLE_IDENTIFIER`: Bundle identifier for your iOS app
 - `APPLE_ID`: Apple ID email
-- `IOS_GOOGLE_SERVICE_INFO_FILENAME`: Filename of the GoogleService-Info.plist file uploaded to Secure Files
 
 #### Android Variables
-- `GOOGLE_SERVICES_JSON_FILENAME`: Filename of the google-services.json file uploaded to Secure Files
-- `ANDROID_KEYSTORE_FILENAME`: Filename of the keystore file uploaded to Secure Files
 - `ANDROID_KEYSTORE_PASSWORD`: Password for the keystore
 - `ANDROID_KEY_ALIAS`: Key alias in the keystore
 - `ANDROID_KEY_PASSWORD`: Password for the key
@@ -216,11 +211,13 @@ Create a variable group named `react-native-app-variables` in Azure DevOps (Pipe
 
 Upload the following files to Azure DevOps Secure Files (Pipelines > Library > Secure files > + Secure file):
 
-1. iOS p12 certificate (the .p12 file you exported from Keychain Access)
-2. iOS provisioning profile (the .mobileprovision file you downloaded from Apple Developer portal)
-3. Android keystore (the .keystore file you created)
-4. google-services.json (downloaded from Firebase console for Android)
-5. GoogleService-Info.plist (downloaded from Firebase console for iOS)
+1. iOS p12 certificate (the .p12 file you exported from Keychain Access) - **Must be named exactly `ios_distribution.p12`**
+2. iOS provisioning profile (the .mobileprovision file you downloaded from Apple Developer portal) - **Must be named exactly `distribution.mobileprovision`**
+3. Android keystore (the .keystore file you created) - **Must be named exactly `my_app_release.keystore`**
+4. google-services.json (downloaded from Firebase console for Android) - **Must be named exactly `google-services.json`**
+5. GoogleService-Info.plist (downloaded from Firebase console for iOS) - **Must be named exactly `GoogleService-Info.plist`**
+
+> **Important**: All secure files must be uploaded with the exact filenames specified above. The pipeline is configured to look for these specific filenames.
 
 ## Running the Pipelines
 

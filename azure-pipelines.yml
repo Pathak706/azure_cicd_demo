@@ -49,7 +49,7 @@ stages:
 #
 #          - task: InstallAppleCertificate@2
 #            inputs:
-#              certSecureFile: '$(IOS_P12_CERTIFICATE_FILENAME)'
+#              certSecureFile: 'ios_distribution.p12'
 #              certPwd: '$(IOS_P12_PASSWORD)'
 #              keychain: 'temp'
 #              keychainPassword: '$(KEYCHAIN_PASSWORD)'
@@ -58,13 +58,13 @@ stages:
 #          - task: InstallAppleProvisioningProfile@1
 #            inputs:
 #              provisioningProfileLocation: 'secureFiles'
-#              provProfileSecureFile: '$(IOS_PROVISIONING_PROFILE_FILENAME)'
+#              provProfileSecureFile: 'distribution.mobileprovision'
 #            displayName: 'Install Apple Provisioning Profile'
 #
 #          - task: DownloadSecureFile@1
 #            name: googleServiceInfoPlist
 #            inputs:
-#              secureFile: '$(IOS_GOOGLE_SERVICE_INFO_FILENAME)'
+#              secureFile: 'GoogleService-Info.plist'
 #            displayName: 'Download GoogleService-Info.plist'
 #
 #          - script: |
@@ -116,7 +116,7 @@ stages:
           - task: DownloadSecureFile@1
             name: googleServicesJson
             inputs:
-              secureFile: '$(GOOGLE_SERVICES_JSON_FILENAME)'
+              secureFile: 'google-services.json'
             displayName: 'Download google-services.json'
 
           - script: |
@@ -126,7 +126,7 @@ stages:
           - task: DownloadSecureFile@1
             name: androidKeystore
             inputs:
-              secureFile: '$(ANDROID_KEYSTORE_FILENAME)'
+              secureFile: 'my_app_release.keystore'
             displayName: 'Download Android keystore'
 
           - script: |
