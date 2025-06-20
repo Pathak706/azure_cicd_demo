@@ -102,6 +102,11 @@ task createAutolinkingJson {
 // Make sure the autolinking.json file is created before any React Native tasks
 preBuild.dependsOn createAutolinkingJson
 
+// Ensure generateAutolinkingNewArchitectureFiles task depends on createAutolinkingJson
+afterEvaluate {
+    tasks.findByName('generateAutolinkingNewArchitectureFiles')?.dependsOn(createAutolinkingJson)
+}
+
 android {
     ndkVersion rootProject.ext.ndkVersion
     compileSdk rootProject.ext.compileSdkVersion
