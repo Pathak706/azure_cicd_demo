@@ -21,14 +21,11 @@ platform :android do
     # Ensure that your git status is not dirty
     ensure_git_status_clean
 
-    # Increment version code
-    increment_version_code(
-      gradle_file_path: "app/build.gradle"
-    )
+    # Skip version code increment as it's now handled in the CI pipeline
 
-    # Build the Android app
+    # Build the Android app (both AAB and APK)
     gradle(
-      task: "clean bundleRelease",
+      task: "clean bundleRelease assembleRelease",
       properties: {
         "android.injected.signing.store.file" => ENV["ANDROID_KEYSTORE_PATH"],
         "android.injected.signing.store.password" => ENV["ANDROID_KEYSTORE_PASSWORD"],

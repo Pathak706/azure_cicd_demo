@@ -69,6 +69,23 @@ jobs:
           cd android
           ./gradlew clean
 
+      - name: Update app version
+        run: |
+          # Get version from package.json
+          VERSION=$(node -p "require('./package.json').version")
+          echo "Using version from package.json: $VERSION"
+
+          # Get current versionCode from build.gradle
+          CURRENT_VERSION_CODE=$(grep -o "versionCode [0-9]*" android/app/build.gradle | awk '{print $2}')
+          NEW_VERSION_CODE=$((CURRENT_VERSION_CODE + 1))
+          echo "Incrementing versionCode from $CURRENT_VERSION_CODE to $NEW_VERSION_CODE"
+
+          # Update versionName and versionCode in build.gradle
+          sed -i "s/versionCode $CURRENT_VERSION_CODE/versionCode $NEW_VERSION_CODE/" android/app/build.gradle
+          sed -i "s/versionName \"[^\"]*\"/versionName \"$VERSION\"/" android/app/build.gradle
+
+          echo "Updated app/build.gradle with new version information"
+
       - name: Build Android APK
         run: |
           cd android

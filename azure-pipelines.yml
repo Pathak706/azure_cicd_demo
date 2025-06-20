@@ -102,8 +102,9 @@ stages:
             displayName: 'Install Node.js'
 
           - script: |
+              rm -rf node_modules
               npm ci
-            displayName: 'Install npm dependencies'
+            displayName: 'Clean and install npm dependencies'
 
           - task: JavaToolInstaller@0
             inputs:
@@ -129,8 +130,8 @@ stages:
             displayName: 'Download Android keystore'
 
           - script: |
-              cp $(androidKeystore.secureFilePath) android/app/release.keystore
-              echo "storeFile=release.keystore" > android/keystore.properties
+              cp $(androidKeystore.secureFilePath) android/release.keystore
+              echo "storeFile=../release.keystore" > android/keystore.properties
               echo "storePassword=$(ANDROID_KEYSTORE_PASSWORD)" >> android/keystore.properties
               echo "keyAlias=$(ANDROID_KEY_ALIAS)" >> android/keystore.properties
               echo "keyPassword=$(ANDROID_KEY_PASSWORD)" >> android/keystore.properties
@@ -141,12 +142,34 @@ stages:
             displayName: 'Install Firebase CLI'
 
           - script: |
+              # Get version from package.json
+              VERSION=$(node -p "require('./package.json').version")
+              echo "Using version from package.json: $VERSION"
+
+              # Get current versionCode from build.gradle
+              CURRENT_VERSION_CODE=$(grep -o "versionCode [0-9]*" android/app/build.gradle | awk '{print $2}')
+              NEW_VERSION_CODE=$((CURRENT_VERSION_CODE + 1))
+              echo "Incrementing versionCode from $CURRENT_VERSION_CODE to $NEW_VERSION_CODE"
+
+              # Update versionName and versionCode in build.gradle
+              sed -i "s/versionCode $CURRENT_VERSION_CODE/versionCode $NEW_VERSION_CODE/" android/app/build.gradle
+              sed -i "s/versionName \"[^\"]*\"/versionName \"$VERSION\"/" android/app/build.gradle
+
+              echo "Updated app/build.gradle with new version information"
+            displayName: 'Update app version'
+
+          - script: |
+              cd android
+              ./gradlew clean
+            displayName: 'Clean Android build'
+
+          - script: |
               cd android
               bundle install
               bundle exec fastlane beta
             env:
               ANDROID_PACKAGE_NAME: '$(ANDROID_PACKAGE_NAME)'
-              ANDROID_KEYSTORE_PATH: 'app/release.keystore'
+              ANDROID_KEYSTORE_PATH: '../release.keystore'
               ANDROID_KEYSTORE_PASSWORD: '$(ANDROID_KEYSTORE_PASSWORD)'
               ANDROID_KEY_ALIAS: '$(ANDROID_KEY_ALIAS)'
               ANDROID_KEY_PASSWORD: '$(ANDROID_KEY_PASSWORD)'
@@ -154,3 +177,17 @@ stages:
               FIREBASE_CLI_TOKEN: '$(FIREBASE_CLI_TOKEN)'
               FIREBASE_TESTERS: '$(FIREBASE_TESTERS)'
             displayName: 'Build and deploy to App Tester'
+
+          - script: |
+              if [ ! -f android/app/build/outputs/apk/release/app-release.apk ]; then
+                echo "APK file not found!"
+                exit 1
+              fi
+            displayName: 'Verify APK exists'
+
+          - task: PublishPipelineArtifact@1
+            inputs:
+              targetPath: 'android/app/build/outputs/apk/release/app-release.apk'
+              artifact: 'app-release'
+              publishLocation: 'pipeline'
+            displayName: 'Upload APK as artifact'
