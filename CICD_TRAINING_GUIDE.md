@@ -232,8 +232,8 @@ Firebase App Distribution is used to distribute app builds to testers before rel
 
 ```ruby
 sh("firebase appdistribution:distribute app/build/outputs/apk/release/app-release.apk \
-  --app #{ENV["FIREBASE_APP_ID_ANDROID"]} \
-  --testers #{ENV["FIREBASE_TESTERS"]} \
+  --app \"#{ENV["FIREBASE_APP_ID_ANDROID"]}\" \
+  --testers \"#{ENV["FIREBASE_TESTERS"]}\" \
   --release-notes \"New beta build\" \
   --token \"#{ENV["FIREBASE_CLI_TOKEN"]}\"")
 ```
