@@ -137,12 +137,12 @@ stages:
           - task: DownloadSecureFile@1
             name: androidKeystore
             inputs:
-              secureFile: 'my_app_release.keystore'
+              secureFile: 'my-release-key.keystore'
             displayName: 'Download Android keystore'
 
           - script: |
               cp $(androidKeystore.secureFilePath) android/app/my-release-key.keystore
-              echo "storeFile=my-release-key.keystore" > android/keystore.properties
+              echo "storeFile=../app/my-release-key.keystore" > android/keystore.properties
               echo "storePassword=$(ANDROID_KEYSTORE_PASSWORD)" >> android/keystore.properties
               echo "keyAlias=$(ANDROID_KEY_ALIAS)" >> android/keystore.properties
               echo "keyPassword=$(ANDROID_KEY_PASSWORD)" >> android/keystore.properties
@@ -180,7 +180,7 @@ stages:
               fastlane beta
             env:
               ANDROID_PACKAGE_NAME: '$(ANDROID_PACKAGE_NAME)'
-              ANDROID_KEYSTORE_PATH: 'app/my-release-key.keystore'
+              ANDROID_KEYSTORE_PATH: '../app/my-release-key.keystore'
               ANDROID_KEYSTORE_PASSWORD: '$(ANDROID_KEYSTORE_PASSWORD)'
               ANDROID_KEY_ALIAS: '$(ANDROID_KEY_ALIAS)'
               ANDROID_KEY_PASSWORD: '$(ANDROID_KEY_PASSWORD)'
