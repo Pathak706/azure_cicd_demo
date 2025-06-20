@@ -1,150 +1,150 @@
-name: iOS Build and Deploy
-
-on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
-  workflow_dispatch:
-
-jobs:
-  build:
-    name: Build and Deploy iOS
-    runs-on: macos-14
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '18'
-          cache: 'npm'
-
-      - name: Select Xcode version
-        run: |
-          # Try to use Xcode 15.2 or 15.1 if available, otherwise fall back to the default
-          if [ -d "/Applications/Xcode_15.2.app" ]; then
-            sudo xcode-select -s /Applications/Xcode_15.2.app
-          elif [ -d "/Applications/Xcode_15.1.app" ]; then
-            sudo xcode-select -s /Applications/Xcode_15.1.app
-          else
-            echo "Warning: Preferred Xcode version not found, using default"
-            echo "Checking default Xcode version..."
-            xcodebuild -version
-            # Check if default Xcode version is at least 15.1
-            XCODE_VERSION=$(xcodebuild -version | grep "Xcode" | awk '{print $2}')
-            MAJOR_VERSION=$(echo $XCODE_VERSION | cut -d. -f1)
-            MINOR_VERSION=$(echo $XCODE_VERSION | cut -d. -f2)
-
-            if [[ $MAJOR_VERSION -lt 15 || ($MAJOR_VERSION -eq 15 && $MINOR_VERSION -lt 1) ]]; then
-              echo "Error: React Native requires Xcode >= 15.1. Found $XCODE_VERSION."
-              exit 1
-            fi
-          fi
-          xcodebuild -version
-
-      - name: Clean node_modules and reinstall
-        run: |
-          rm -rf node_modules
-          npm ci
-
-      - name: Install CocoaPods
-        run: |
-          # Check if CocoaPods is installed
-          if ! command -v pod &> /dev/null; then
-            echo "Error: CocoaPods is not installed."
-            echo "Installing CocoaPods..."
-            gem install cocoapods
-          fi
-
-          echo "Installing CocoaPods dependencies..."
-          cd ios && pod install
-
-      - name: Setup Ruby
-        uses: ruby/setup-ruby@v1
-        with:
-          ruby-version: '3.0'
-          bundler-cache: true
-
-      - name: Install Fastlane
-        run: gem install fastlane
-
-      # Use the existing Firebase configuration file
-      - name: Verify Firebase configuration
-        run: |
-          if [ -f ios/GoogleService-Info.plist ]; then
-            echo "Using existing GoogleService-Info.plist file"
-          else
-            echo "Error: GoogleService-Info.plist file not found"
-            exit 1
-          fi
-
-      - name: Update app version
-        run: |
-          # Get version from package.json
-          VERSION=$(node -p "require('./package.json').version")
-          echo "Using version from package.json: $VERSION"
-
-          # Get current build number from project.pbxproj
-          CURRENT_BUILD_NUMBER=$(grep -m 1 "CURRENT_PROJECT_VERSION = " ios/azure_cicd_demo.xcodeproj/project.pbxproj | awk '{print $3}' | sed 's/;//')
-          NEW_BUILD_NUMBER=$((CURRENT_BUILD_NUMBER + 1))
-          echo "Incrementing build number from $CURRENT_BUILD_NUMBER to $NEW_BUILD_NUMBER"
-
-          # Update version and build number in project.pbxproj
-          sed -i '' "s/MARKETING_VERSION = [^;]*/MARKETING_VERSION = $VERSION/" ios/azure_cicd_demo.xcodeproj/project.pbxproj
-          sed -i '' "s/CURRENT_PROJECT_VERSION = [^;]*/CURRENT_PROJECT_VERSION = $NEW_BUILD_NUMBER/" ios/azure_cicd_demo.xcodeproj/project.pbxproj
-
-          echo "Updated project.pbxproj with new version information"
-
-      - name: Build iOS app (Demo mode)
-        run: |
-          cd ios
-          # For demo purposes, we'll just run a partial build that doesn't require signing
-          # Add C++ compiler flags to fix React-jsinspector compilation issues
-          echo "Starting iOS build with enhanced C++ compiler flags..."
-
-          # Create a log directory
-          mkdir -p build/logs
-
-          # Run the build with verbose output and save logs
-          set -o pipefail && xcodebuild -workspace azure_cicd_demo.xcworkspace \
-            -scheme azure_cicd_demo \
-            -configuration Debug \
-            -sdk iphonesimulator \
-            -derivedDataPath build \
-            OTHER_CPLUSPLUSFLAGS="-std=c++17 -DFOLLY_NO_CONFIG -DFOLLY_MOBILE=1 -DFOLLY_USE_LIBCPP=1" \
-            COMPILER_INDEX_STORE_ENABLE=NO \
-            | tee build/logs/xcodebuild.log
-
-          echo "Build completed. Check logs for details."
-
-      - name: Create demo IPA file
-        run: |
-          # For demo purposes, create a dummy IPA file
-          cd ios/build
-          mkdir -p Payload
-          cp -R Debug-iphonesimulator/azure_cicd_demo.app Payload/
-          zip -r azure_cicd_demo.ipa Payload
-          echo "Created demo IPA file"
-
-      - name: Upload IPA as artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: ios-app-demo
-          path: ios/build/azure_cicd_demo.ipa
-          retention-days: 5
-
-      - name: Upload build logs
-        uses: actions/upload-artifact@v4
-        with:
-          name: ios-build-logs
-          path: ios/build/logs
-          retention-days: 5
-        if: always() # Upload logs even if the build fails
-
-      - name: Demo TestFlight upload (skipped)
-        run: |
-          echo "In a real environment with Apple Developer credentials, the app would be uploaded to TestFlight here."
-          echo "For this demo, we've created and uploaded the IPA as an artifact instead."
+#name: iOS Build and Deploy
+#
+#on:
+#  push:
+#    branches: [ main ]
+#  pull_request:
+#    branches: [ main ]
+#  workflow_dispatch:
+#
+#jobs:
+#  build:
+#    name: Build and Deploy iOS
+#    runs-on: macos-14
+#
+#    steps:
+#      - name: Checkout code
+#        uses: actions/checkout@v4
+#
+#      - name: Setup Node.js
+#        uses: actions/setup-node@v4
+#        with:
+#          node-version: '18'
+#          cache: 'npm'
+#
+#      - name: Select Xcode version
+#        run: |
+#          # Try to use Xcode 15.2 or 15.1 if available, otherwise fall back to the default
+#          if [ -d "/Applications/Xcode_15.2.app" ]; then
+#            sudo xcode-select -s /Applications/Xcode_15.2.app
+#          elif [ -d "/Applications/Xcode_15.1.app" ]; then
+#            sudo xcode-select -s /Applications/Xcode_15.1.app
+#          else
+#            echo "Warning: Preferred Xcode version not found, using default"
+#            echo "Checking default Xcode version..."
+#            xcodebuild -version
+#            # Check if default Xcode version is at least 15.1
+#            XCODE_VERSION=$(xcodebuild -version | grep "Xcode" | awk '{print $2}')
+#            MAJOR_VERSION=$(echo $XCODE_VERSION | cut -d. -f1)
+#            MINOR_VERSION=$(echo $XCODE_VERSION | cut -d. -f2)
+#
+#            if [[ $MAJOR_VERSION -lt 15 || ($MAJOR_VERSION -eq 15 && $MINOR_VERSION -lt 1) ]]; then
+#              echo "Error: React Native requires Xcode >= 15.1. Found $XCODE_VERSION."
+#              exit 1
+#            fi
+#          fi
+#          xcodebuild -version
+#
+#      - name: Clean node_modules and reinstall
+#        run: |
+#          rm -rf node_modules
+#          npm ci
+#
+#      - name: Install CocoaPods
+#        run: |
+#          # Check if CocoaPods is installed
+#          if ! command -v pod &> /dev/null; then
+#            echo "Error: CocoaPods is not installed."
+#            echo "Installing CocoaPods..."
+#            gem install cocoapods
+#          fi
+#
+#          echo "Installing CocoaPods dependencies..."
+#          cd ios && pod install
+#
+#      - name: Setup Ruby
+#        uses: ruby/setup-ruby@v1
+#        with:
+#          ruby-version: '3.0'
+#          bundler-cache: true
+#
+#      - name: Install Fastlane
+#        run: gem install fastlane
+#
+#      # Use the existing Firebase configuration file
+#      - name: Verify Firebase configuration
+#        run: |
+#          if [ -f ios/GoogleService-Info.plist ]; then
+#            echo "Using existing GoogleService-Info.plist file"
+#          else
+#            echo "Error: GoogleService-Info.plist file not found"
+#            exit 1
+#          fi
+#
+#      - name: Update app version
+#        run: |
+#          # Get version from package.json
+#          VERSION=$(node -p "require('./package.json').version")
+#          echo "Using version from package.json: $VERSION"
+#
+#          # Get current build number from project.pbxproj
+#          CURRENT_BUILD_NUMBER=$(grep -m 1 "CURRENT_PROJECT_VERSION = " ios/azure_cicd_demo.xcodeproj/project.pbxproj | awk '{print $3}' | sed 's/;//')
+#          NEW_BUILD_NUMBER=$((CURRENT_BUILD_NUMBER + 1))
+#          echo "Incrementing build number from $CURRENT_BUILD_NUMBER to $NEW_BUILD_NUMBER"
+#
+#          # Update version and build number in project.pbxproj
+#          sed -i '' "s/MARKETING_VERSION = [^;]*/MARKETING_VERSION = $VERSION/" ios/azure_cicd_demo.xcodeproj/project.pbxproj
+#          sed -i '' "s/CURRENT_PROJECT_VERSION = [^;]*/CURRENT_PROJECT_VERSION = $NEW_BUILD_NUMBER/" ios/azure_cicd_demo.xcodeproj/project.pbxproj
+#
+#          echo "Updated project.pbxproj with new version information"
+#
+#      - name: Build iOS app (Demo mode)
+#        run: |
+#          cd ios
+#          # For demo purposes, we'll just run a partial build that doesn't require signing
+#          # Add C++ compiler flags to fix React-jsinspector compilation issues
+#          echo "Starting iOS build with enhanced C++ compiler flags..."
+#
+#          # Create a log directory
+#          mkdir -p build/logs
+#
+#          # Run the build with verbose output and save logs
+#          set -o pipefail && xcodebuild -workspace azure_cicd_demo.xcworkspace \
+#            -scheme azure_cicd_demo \
+#            -configuration Debug \
+#            -sdk iphonesimulator \
+#            -derivedDataPath build \
+#            OTHER_CPLUSPLUSFLAGS="-std=c++17 -DFOLLY_NO_CONFIG -DFOLLY_MOBILE=1 -DFOLLY_USE_LIBCPP=1" \
+#            COMPILER_INDEX_STORE_ENABLE=NO \
+#            | tee build/logs/xcodebuild.log
+#
+#          echo "Build completed. Check logs for details."
+#
+#      - name: Create demo IPA file
+#        run: |
+#          # For demo purposes, create a dummy IPA file
+#          cd ios/build
+#          mkdir -p Payload
+#          cp -R Debug-iphonesimulator/azure_cicd_demo.app Payload/
+#          zip -r azure_cicd_demo.ipa Payload
+#          echo "Created demo IPA file"
+#
+#      - name: Upload IPA as artifact
+#        uses: actions/upload-artifact@v4
+#        with:
+#          name: ios-app-demo
+#          path: ios/build/azure_cicd_demo.ipa
+#          retention-days: 5
+#
+#      - name: Upload build logs
+#        uses: actions/upload-artifact@v4
+#        with:
+#          name: ios-build-logs
+#          path: ios/build/logs
+#          retention-days: 5
+#        if: always() # Upload logs even if the build fails
+#
+#      - name: Demo TestFlight upload (skipped)
+#        run: |
+#          echo "In a real environment with Apple Developer credentials, the app would be uploaded to TestFlight here."
+#          echo "For this demo, we've created and uploaded the IPA as an artifact instead."

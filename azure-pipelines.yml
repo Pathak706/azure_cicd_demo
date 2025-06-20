@@ -22,67 +22,67 @@ variables:
   - group: react-native-app-variables
 
 stages:
-  - stage: iOS
-    displayName: 'iOS Build and Deploy'
-    dependsOn: []
-    pool:
-      vmImage: 'macos-latest'
-    jobs:
-      - job: Build
-        displayName: 'Build and Deploy iOS'
-        steps:
-          - checkout: self
-            clean: true
-
-          - task: NodeTool@0
-            inputs:
-              versionSpec: '18.x'
-            displayName: 'Install Node.js'
-
-          - script: |
-              npm ci
-            displayName: 'Install npm dependencies'
-
-          - script: |
-              cd ios && pod install
-            displayName: 'Install CocoaPods dependencies'
-
-          - task: InstallAppleCertificate@2
-            inputs:
-              certSecureFile: '$(IOS_P12_CERTIFICATE_FILENAME)'
-              certPwd: '$(IOS_P12_PASSWORD)'
-              keychain: 'temp'
-              keychainPassword: '$(KEYCHAIN_PASSWORD)'
-            displayName: 'Install Apple Certificate'
-
-          - task: InstallAppleProvisioningProfile@1
-            inputs:
-              provisioningProfileLocation: 'secureFiles'
-              provProfileSecureFile: '$(IOS_PROVISIONING_PROFILE_FILENAME)'
-            displayName: 'Install Apple Provisioning Profile'
-
-          - task: DownloadSecureFile@1
-            name: googleServiceInfoPlist
-            inputs:
-              secureFile: '$(IOS_GOOGLE_SERVICE_INFO_FILENAME)'
-            displayName: 'Download GoogleService-Info.plist'
-
-          - script: |
-              cp $(googleServiceInfoPlist.secureFilePath) ios/GoogleService-Info.plist
-            displayName: 'Copy GoogleService-Info.plist'
-
-          - script: |
-              cd ios
-              bundle install
-              bundle exec fastlane beta
-            env:
-              BUNDLE_IDENTIFIER: '$(IOS_BUNDLE_IDENTIFIER)'
-              TEAM_ID: '$(TEAM_ID)'
-              APPLE_ID: '$(APPLE_ID)'
-              APP_STORE_CONNECT_API_KEY_ID: '$(APP_STORE_CONNECT_API_KEY_ID)'
-              APP_STORE_CONNECT_API_KEY_ISSUER_ID: '$(APP_STORE_CONNECT_API_KEY_ISSUER_ID)'
-              APP_STORE_CONNECT_API_KEY_CONTENT: '$(APP_STORE_CONNECT_API_KEY_CONTENT)'
-            displayName: 'Build and deploy to TestFlight'
+#  - stage: iOS
+#    displayName: 'iOS Build and Deploy'
+#    dependsOn: []
+#    pool:
+#      vmImage: 'macos-latest'
+#    jobs:
+#      - job: Build
+#        displayName: 'Build and Deploy iOS'
+#        steps:
+#          - checkout: self
+#            clean: true
+#
+#          - task: NodeTool@0
+#            inputs:
+#              versionSpec: '18.x'
+#            displayName: 'Install Node.js'
+#
+#          - script: |
+#              npm ci
+#            displayName: 'Install npm dependencies'
+#
+#          - script: |
+#              cd ios && pod install
+#            displayName: 'Install CocoaPods dependencies'
+#
+#          - task: InstallAppleCertificate@2
+#            inputs:
+#              certSecureFile: '$(IOS_P12_CERTIFICATE_FILENAME)'
+#              certPwd: '$(IOS_P12_PASSWORD)'
+#              keychain: 'temp'
+#              keychainPassword: '$(KEYCHAIN_PASSWORD)'
+#            displayName: 'Install Apple Certificate'
+#
+#          - task: InstallAppleProvisioningProfile@1
+#            inputs:
+#              provisioningProfileLocation: 'secureFiles'
+#              provProfileSecureFile: '$(IOS_PROVISIONING_PROFILE_FILENAME)'
+#            displayName: 'Install Apple Provisioning Profile'
+#
+#          - task: DownloadSecureFile@1
+#            name: googleServiceInfoPlist
+#            inputs:
+#              secureFile: '$(IOS_GOOGLE_SERVICE_INFO_FILENAME)'
+#            displayName: 'Download GoogleService-Info.plist'
+#
+#          - script: |
+#              cp $(googleServiceInfoPlist.secureFilePath) ios/GoogleService-Info.plist
+#            displayName: 'Copy GoogleService-Info.plist'
+#
+#          - script: |
+#              cd ios
+#              bundle install
+#              bundle exec fastlane beta
+#            env:
+#              BUNDLE_IDENTIFIER: '$(IOS_BUNDLE_IDENTIFIER)'
+#              TEAM_ID: '$(TEAM_ID)'
+#              APPLE_ID: '$(APPLE_ID)'
+#              APP_STORE_CONNECT_API_KEY_ID: '$(APP_STORE_CONNECT_API_KEY_ID)'
+#              APP_STORE_CONNECT_API_KEY_ISSUER_ID: '$(APP_STORE_CONNECT_API_KEY_ISSUER_ID)'
+#              APP_STORE_CONNECT_API_KEY_CONTENT: '$(APP_STORE_CONNECT_API_KEY_CONTENT)'
+#            displayName: 'Build and deploy to TestFlight'
 
   - stage: Android
     displayName: 'Android Build and Deploy'
