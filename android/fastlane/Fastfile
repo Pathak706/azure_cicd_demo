@@ -42,7 +42,7 @@ platform :android do
       --app #{ENV["FIREBASE_APP_ID_ANDROID"]} \
       --groups testers \
       --release-notes \"New beta build\" \
-      --token #{ENV["FIREBASE_CLI_TOKEN"]}")
+      --token \"#{ENV["FIREBASE_CLI_TOKEN"]}\"")
 
     # Commit the version bump
     git_commit(

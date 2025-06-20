@@ -73,4 +73,4 @@ jobs:
             --app ${{ secrets.FIREBASE_APP_ID_ANDROID }} \
             --groups "testers" \
             --release-notes "New build from GitHub Actions" \
-            --token ${{ secrets.FIREBASE_CLI_TOKEN }}
+            --token "${{ secrets.FIREBASE_CLI_TOKEN }}"
