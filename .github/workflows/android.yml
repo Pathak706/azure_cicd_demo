@@ -59,6 +59,17 @@ jobs:
           echo "keyAlias=${{ secrets.ANDROID_KEY_ALIAS }}" >> android/keystore.properties
           echo "keyPassword=${{ secrets.ANDROID_KEY_PASSWORD }}" >> android/keystore.properties
 
+      - name: Create autolinking.json
+        run: |
+          mkdir -p android/build/generated/autolinking
+          cat > android/build/generated/autolinking/autolinking.json << 'EOL'
+          {
+            "packageName": "net.techconsulting.rn_cicd_demo",
+            "applicationId": "net.techconsulting.rn_cicd_demo",
+            "libraries": []
+          }
+          EOL
+
       - name: Build Android APK
         run: |
           cd android
