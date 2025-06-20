@@ -52,24 +52,6 @@ react {
 
     /* Autolinking */
     autolinkLibrariesWithApp()
-
-    // Create a minimal autolinking.json file if it doesn't exist
-    doFirst {
-        def autolinkDir = file("$buildDir/generated/autolinking")
-        if (!autolinkDir.exists()) {
-            autolinkDir.mkdirs()
-        }
-        def autolinkFile = file("$buildDir/generated/autolinking/autolinking.json")
-        if (!autolinkFile.exists()) {
-            autolinkFile.text = """
-{
-  "packageName": "net.techconsulting.rn_cicd_demo",
-  "applicationId": "net.techconsulting.rn_cicd_demo",
-  "libraries": []
-}
-"""
-        }
-    }
 }
 
 /**
@@ -96,6 +78,29 @@ def keystoreProperties = new Properties()
 if (keystorePropertiesFile.exists()) {
     keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
 }
+
+// Task to create autolinking.json file
+task createAutolinkingJson {
+    doLast {
+        def autolinkDir = file("$buildDir/generated/autolinking")
+        if (!autolinkDir.exists()) {
+            autolinkDir.mkdirs()
+        }
+        def autolinkFile = file("$buildDir/generated/autolinking/autolinking.json")
+        if (!autolinkFile.exists()) {
+            autolinkFile.text = """
+{
+  "packageName": "net.techconsulting.rn_cicd_demo",
+  "applicationId": "net.techconsulting.rn_cicd_demo",
+  "libraries": []
+}
+"""
+        }
+    }
+}
+
+// Make sure the autolinking.json file is created before any React Native tasks
+preBuild.dependsOn createAutolinkingJson
 
 android {
     ndkVersion rootProject.ext.ndkVersion
