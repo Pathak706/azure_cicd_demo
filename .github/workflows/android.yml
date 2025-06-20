@@ -59,17 +59,17 @@ jobs:
           echo "keyAlias=${{ secrets.ANDROID_KEY_ALIAS }}" >> android/keystore.properties
           echo "keyPassword=${{ secrets.ANDROID_KEY_PASSWORD }}" >> android/keystore.properties
 
-      - name: Build Android App Bundle
+      - name: Build Android APK
         run: |
           cd android
-          ./gradlew bundleRelease
+          ./gradlew assembleRelease
 
       - name: Setup Firebase CLI
         run: npm install -g firebase-tools
 
       - name: Upload to App Tester
         run: |
-          firebase appdistribution:distribute android/app/build/outputs/bundle/release/app-release.aab \
+          firebase appdistribution:distribute android/app/build/outputs/apk/release/app-release.apk \
             --app ${{ secrets.FIREBASE_APP_ID_ANDROID }} \
             --groups "testers" \
             --release-notes "New build from GitHub Actions" \
