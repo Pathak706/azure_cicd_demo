@@ -1,0 +1,147 @@
+# Azure DevOps Pipeline for React Native iOS and Android
+
+trigger:
+  branches:
+    include:
+      - main
+  paths:
+    exclude:
+      - README.md
+      - .github/**
+
+pr:
+  branches:
+    include:
+      - main
+  paths:
+    exclude:
+      - README.md
+      - .github/**
+
+variables:
+  - group: react-native-app-variables
+
+stages:
+  - stage: iOS
+    displayName: 'iOS Build and Deploy'
+    dependsOn: []
+    pool:
+      vmImage: 'macos-latest'
+    jobs:
+      - job: Build
+        displayName: 'Build and Deploy iOS'
+        steps:
+          - checkout: self
+            clean: true
+            
+          - task: NodeTool@0
+            inputs:
+              versionSpec: '18.x'
+            displayName: 'Install Node.js'
+            
+          - script: |
+              npm ci
+            displayName: 'Install npm dependencies'
+            
+          - script: |
+              cd ios && pod install
+            displayName: 'Install CocoaPods dependencies'
+            
+          - task: InstallAppleCertificate@2
+            inputs:
+              certSecureFile: '$(IOS_P12_CERTIFICATE_FILENAME)'
+              certPwd: '$(IOS_P12_PASSWORD)'
+              keychain: 'temp'
+              keychainPassword: '$(KEYCHAIN_PASSWORD)'
+            displayName: 'Install Apple Certificate'
+            
+          - task: InstallAppleProvisioningProfile@1
+            inputs:
+              provisioningProfileLocation: 'secureFiles'
+              provProfileSecureFile: '$(IOS_PROVISIONING_PROFILE_FILENAME)'
+            displayName: 'Install Apple Provisioning Profile'
+            
+          - script: |
+              cd ios
+              bundle install
+              bundle exec fastlane beta
+            env:
+              BUNDLE_IDENTIFIER: '$(IOS_BUNDLE_IDENTIFIER)'
+              TEAM_ID: '$(TEAM_ID)'
+              APPLE_ID: '$(APPLE_ID)'
+              APP_STORE_CONNECT_API_KEY_ID: '$(APP_STORE_CONNECT_API_KEY_ID)'
+              APP_STORE_CONNECT_API_KEY_ISSUER_ID: '$(APP_STORE_CONNECT_API_KEY_ISSUER_ID)'
+              APP_STORE_CONNECT_API_KEY_CONTENT: '$(APP_STORE_CONNECT_API_KEY_CONTENT)'
+            displayName: 'Build and deploy to TestFlight'
+
+  - stage: Android
+    displayName: 'Android Build and Deploy'
+    dependsOn: []
+    pool:
+      vmImage: 'ubuntu-latest'
+    jobs:
+      - job: Build
+        displayName: 'Build and Deploy Android'
+        steps:
+          - checkout: self
+            clean: true
+            
+          - task: NodeTool@0
+            inputs:
+              versionSpec: '18.x'
+            displayName: 'Install Node.js'
+            
+          - script: |
+              npm ci
+            displayName: 'Install npm dependencies'
+            
+          - task: JavaToolInstaller@0
+            inputs:
+              versionSpec: '17'
+              jdkArchitectureOption: 'x64'
+              jdkSourceOption: 'PreInstalled'
+            displayName: 'Install Java'
+            
+          - task: DownloadSecureFile@1
+            name: googleServicesJson
+            inputs:
+              secureFile: '$(GOOGLE_SERVICES_JSON_FILENAME)'
+            displayName: 'Download google-services.json'
+            
+          - script: |
+              cp $(googleServicesJson.secureFilePath) android/app/google-services.json
+            displayName: 'Copy google-services.json'
+            
+          - task: DownloadSecureFile@1
+            name: androidKeystore
+            inputs:
+              secureFile: '$(ANDROID_KEYSTORE_FILENAME)'
+            displayName: 'Download Android keystore'
+            
+          - script: |
+              cp $(androidKeystore.secureFilePath) android/app/release.keystore
+              echo "storeFile=release.keystore" > android/keystore.properties
+              echo "storePassword=$(ANDROID_KEYSTORE_PASSWORD)" >> android/keystore.properties
+              echo "keyAlias=$(ANDROID_KEY_ALIAS)" >> android/keystore.properties
+              echo "keyPassword=$(ANDROID_KEY_PASSWORD)" >> android/keystore.properties
+            displayName: 'Setup Android signing'
+            
+          - task: DownloadSecureFile@1
+            name: firebaseServiceAccount
+            inputs:
+              secureFile: '$(FIREBASE_SERVICE_ACCOUNT_FILENAME)'
+            displayName: 'Download Firebase service account'
+            
+          - script: |
+              cd android
+              bundle install
+              bundle exec fastlane beta
+            env:
+              ANDROID_PACKAGE_NAME: '$(ANDROID_PACKAGE_NAME)'
+              ANDROID_KEYSTORE_PATH: 'app/release.keystore'
+              ANDROID_KEYSTORE_PASSWORD: '$(ANDROID_KEYSTORE_PASSWORD)'
+              ANDROID_KEY_ALIAS: '$(ANDROID_KEY_ALIAS)'
+              ANDROID_KEY_PASSWORD: '$(ANDROID_KEY_PASSWORD)'
+              FIREBASE_APP_ID_ANDROID: '$(FIREBASE_APP_ID_ANDROID)'
+              FIREBASE_SERVICE_ACCOUNT_PATH: '$(firebaseServiceAccount.secureFilePath)'
+            displayName: 'Build and deploy to App Tester'

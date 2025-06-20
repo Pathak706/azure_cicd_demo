@@ -1,0 +1,58 @@
+# This file contains the fastlane.tools configuration
+# You can find the documentation at https://docs.fastlane.tools
+#
+# For a list of all available actions, check out
+#
+#     https://docs.fastlane.tools/actions
+#
+# For a list of all available plugins, check out
+#
+#     https://docs.fastlane.tools/plugins/available-plugins
+#
+
+# Uncomment the line if you want fastlane to automatically update itself
+# update_fastlane
+
+default_platform(:ios)
+
+platform :ios do
+  desc "Push a new beta build to TestFlight"
+  lane :beta do
+    # Ensure that your git status is not dirty
+    ensure_git_status_clean
+
+    # Increment build number
+    increment_build_number(xcodeproj: "azure_cicd_demo.xcodeproj")
+    
+    # Build the app
+    build_app(
+      workspace: "azure_cicd_demo.xcworkspace",
+      scheme: "azure_cicd_demo",
+      export_method: "app-store",
+      export_options: {
+        provisioningProfiles: {
+          ENV["BUNDLE_IDENTIFIER"] => "match AppStore #{ENV["BUNDLE_IDENTIFIER"]}"
+        }
+      },
+      silent: true,
+      clean: true
+    )
+    
+    # Upload to TestFlight
+    api_key = app_store_connect_api_key(
+      key_id: ENV["APP_STORE_CONNECT_API_KEY_ID"],
+      issuer_id: ENV["APP_STORE_CONNECT_API_KEY_ISSUER_ID"],
+      key_content: ENV["APP_STORE_CONNECT_API_KEY_CONTENT"],
+      duration: 1200,
+      in_house: false
+    )
+    
+    upload_to_testflight(
+      api_key: api_key,
+      skip_waiting_for_build_processing: true
+    )
+    
+    # Commit the version bump
+    commit_version_bump(xcodeproj: "azure_cicd_demo.xcodeproj")
+  end
+end
