@@ -1,66 +1,66 @@
-name: iOS Build and Deploy
-
-on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
-  workflow_dispatch:
-
-jobs:
-  build:
-    name: Build and Deploy iOS
-    runs-on: macos-latest
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '18'
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: |
-          npm ci
-          cd ios && pod install
-
-      - name: Setup Ruby
-        uses: ruby/setup-ruby@v1
-        with:
-          ruby-version: '3.0'
-          bundler-cache: true
-
-      - name: Install Fastlane
-        run: gem install fastlane
-
-      - name: Setup iOS certificates and provisioning profiles
-        uses: apple-actions/import-codesign-certs@v1
-        with:
-          p12-file-base64: ${{ secrets.IOS_P12_CERTIFICATE }}
-          p12-password: ${{ secrets.IOS_P12_PASSWORD }}
-          keychain-password: ${{ secrets.KEYCHAIN_PASSWORD }}
-          keychain: signing_temp
-          create-keychain: true
-
-      - name: Setup provisioning profile
-        run: |
-          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
-          echo "${{ secrets.IOS_PROVISIONING_PROFILE }}" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/profile.mobileprovision
-
-      - name: Setup Firebase configuration
-        run: |
-          echo "${{ secrets.IOS_GOOGLE_SERVICE_INFO }}" | base64 --decode > ios/GoogleService-Info.plist
-
-      - name: Build and deploy to TestFlight
-        env:
-          APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
-          APP_STORE_CONNECT_API_KEY_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ISSUER_ID }}
-          APP_STORE_CONNECT_API_KEY_CONTENT: ${{ secrets.APP_STORE_CONNECT_API_KEY_CONTENT }}
-          TEAM_ID: ${{ secrets.TEAM_ID }}
-          BUNDLE_IDENTIFIER: ${{ secrets.IOS_BUNDLE_IDENTIFIER }}
-        run: |
-          cd ios
-          fastlane beta
+#name: iOS Build and Deploy
+#
+#on:
+#  push:
+#    branches: [ main ]
+#  pull_request:
+#    branches: [ main ]
+#  workflow_dispatch:
+#
+#jobs:
+#  build:
+#    name: Build and Deploy iOS
+#    runs-on: macos-latest
+#
+#    steps:
+#      - name: Checkout code
+#        uses: actions/checkout@v3
+#
+#      - name: Setup Node.js
+#        uses: actions/setup-node@v3
+#        with:
+#          node-version: '18'
+#          cache: 'npm'
+#
+#      - name: Install dependencies
+#        run: |
+#          npm ci
+#          cd ios && pod install
+#
+#      - name: Setup Ruby
+#        uses: ruby/setup-ruby@v1
+#        with:
+#          ruby-version: '3.0'
+#          bundler-cache: true
+#
+#      - name: Install Fastlane
+#        run: gem install fastlane
+#
+#      - name: Setup iOS certificates and provisioning profiles
+#        uses: apple-actions/import-codesign-certs@v1
+#        with:
+#          p12-file-base64: ${{ secrets.IOS_P12_CERTIFICATE }}
+#          p12-password: ${{ secrets.IOS_P12_PASSWORD }}
+#          keychain-password: ${{ secrets.KEYCHAIN_PASSWORD }}
+#          keychain: signing_temp
+#          create-keychain: true
+#
+#      - name: Setup provisioning profile
+#        run: |
+#          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+#          echo "${{ secrets.IOS_PROVISIONING_PROFILE }}" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/profile.mobileprovision
+#
+#      - name: Setup Firebase configuration
+#        run: |
+#          echo "${{ secrets.IOS_GOOGLE_SERVICE_INFO }}" | base64 --decode > ios/GoogleService-Info.plist
+#
+#      - name: Build and deploy to TestFlight
+#        env:
+#          APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+#          APP_STORE_CONNECT_API_KEY_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ISSUER_ID }}
+#          APP_STORE_CONNECT_API_KEY_CONTENT: ${{ secrets.APP_STORE_CONNECT_API_KEY_CONTENT }}
+#          TEAM_ID: ${{ secrets.TEAM_ID }}
+#          BUNDLE_IDENTIFIER: ${{ secrets.IOS_BUNDLE_IDENTIFIER }}
+#        run: |
+#          cd ios
+#          fastlane beta

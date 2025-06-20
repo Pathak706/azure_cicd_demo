@@ -20,12 +20,12 @@ platform :android do
   lane :beta do
     # Ensure that your git status is not dirty
     ensure_git_status_clean
-    
+
     # Increment version code
     increment_version_code(
       gradle_file_path: "app/build.gradle"
     )
-    
+
     # Build the Android app
     gradle(
       task: "clean bundleRelease",
@@ -36,17 +36,14 @@ platform :android do
         "android.injected.signing.key.password" => ENV["ANDROID_KEY_PASSWORD"],
       }
     )
-    
-    # Upload to Firebase App Distribution
-    firebase_app_distribution(
-      app: ENV["FIREBASE_APP_ID_ANDROID"],
-      service_credentials_file: ENV["FIREBASE_SERVICE_ACCOUNT_PATH"],
-      release_notes: "New beta build",
-      groups: "testers",
-      android_artifact_type: "AAB",
-      android_artifact_path: "app/build/outputs/bundle/release/app-release.aab"
-    )
-    
+
+    # Upload to Firebase App Distribution using Firebase CLI
+    sh("firebase appdistribution:distribute app/build/outputs/bundle/release/app-release.aab \
+      --app #{ENV["FIREBASE_APP_ID_ANDROID"]} \
+      --groups testers \
+      --release-notes \"New beta build\" \
+      --token #{ENV["FIREBASE_CLI_TOKEN"]}")
+
     # Commit the version bump
     git_commit(
       path: ["app/build.gradle"],

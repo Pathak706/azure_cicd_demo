@@ -33,12 +33,132 @@ Azure DevOps pipeline is defined in the `azure-pipelines.yml` file at the root o
 2. Firebase Project with App Distribution enabled
 3. Android Keystore for signing
 4. Google Services JSON file
+5. Firebase CLI token (instead of a service account)
 
 ## CI/CD Setup Instructions
 
+### Note on Firebase Authentication
+
+This project uses Firebase CLI token authentication for Firebase App Distribution instead of a service account. This approach is simpler and doesn't require creating and managing a service account JSON file. The Firebase CLI token is obtained by logging in to Firebase on your local machine and generating a CI token.
+
+### How to Obtain Required Values
+
+Below is a comprehensive guide on how to obtain all the required values for both GitHub Actions and Azure DevOps pipelines.
+
+#### iOS-Related Values
+
+1. **Apple Developer Account**
+   - Sign up at [developer.apple.com](https://developer.apple.com)
+   - Requires annual subscription ($99/year)
+
+2. **Team ID**
+   - Log in to [developer.apple.com](https://developer.apple.com)
+   - Go to "Membership" section
+   - Your Team ID is displayed under "Team ID" (usually a 10-character alphanumeric string)
+
+3. **iOS Bundle Identifier**
+   - This is the unique identifier for your app (e.g., `com.yourcompany.appname`)
+   - Must match what's in your Xcode project and provisioning profile
+   - Can be found in Xcode under your target's "General" tab or in Info.plist
+
+4. **Apple ID**
+   - The email address you use to log in to your Apple Developer account
+
+5. **iOS Distribution Certificate (p12)**
+   - In Xcode, go to Preferences > Accounts > [Your Apple ID] > Manage Certificates
+   - Click "+" and select "Apple Distribution"
+   - In Keychain Access, find the certificate, right-click and export as .p12
+   - You'll be prompted to set a password (this will be your `IOS_P12_PASSWORD`)
+   - To convert to base64 for GitHub Actions:
+     ```sh
+     base64 -i your_certificate.p12 | pbcopy
+     ```
+
+6. **iOS Provisioning Profile**
+   - Log in to [developer.apple.com](https://developer.apple.com)
+   - Go to "Certificates, Identifiers & Profiles" > "Profiles"
+   - Create a distribution profile for App Store
+   - Download the .mobileprovision file
+   - To convert to base64 for GitHub Actions:
+     ```sh
+     base64 -i your_profile.mobileprovision | pbcopy
+     ```
+
+7. **App Store Connect API Key**
+   - Log in to [appstoreconnect.apple.com](https://appstoreconnect.apple.com)
+   - Go to "Users and Access" > "Keys"
+   - Click "+" to create a new key
+   - Note the Key ID (`APP_STORE_CONNECT_API_KEY_ID`)
+   - Note the Issuer ID (`APP_STORE_CONNECT_API_KEY_ISSUER_ID`)
+   - Download the .p8 file
+   - To get the content for `APP_STORE_CONNECT_API_KEY_CONTENT`:
+     ```sh
+     cat AuthKey_KEYID.p8 | base64 | pbcopy
+     ```
+
+8. **Keychain Password**
+   - This can be any secure password you choose for the temporary keychain created during the build process
+
+9. **iOS Google Service Info**
+   - In the Firebase console, add an iOS app to your project
+   - Enter your iOS Bundle ID
+   - Download the GoogleService-Info.plist file
+   - To convert to base64 for GitHub Actions:
+     ```sh
+     base64 -i GoogleService-Info.plist | pbcopy
+     ```
+
+#### Android-Related Values
+
+1. **Android Package Name**
+   - The unique identifier for your Android app (e.g., `com.yourcompany.appname`)
+   - Found in your app's build.gradle file under `applicationId`
+
+2. **Android Keystore**
+   - Create a keystore file using Android Studio or the command line:
+     ```sh
+     keytool -genkey -v -keystore your_keystore.keystore -alias your_alias -keyalg RSA -keysize 2048 -validity 10000
+     ```
+   - You'll be prompted to set a password (this will be your `ANDROID_KEYSTORE_PASSWORD`)
+   - You'll also set an alias and key password (`ANDROID_KEY_ALIAS` and `ANDROID_KEY_PASSWORD`)
+   - To convert to base64 for GitHub Actions:
+     ```sh
+     base64 -i your_keystore.keystore | pbcopy
+     ```
+
+3. **Firebase App ID for Android**
+   - In the Firebase console, go to Project Settings
+   - In the "Your apps" section, find your Android app
+   - The App ID is displayed as "App ID" (format: `1:123456789012:android:abcdef1234567890`)
+
+4. **Google Services JSON**
+   - In the Firebase console, add an Android app to your project
+   - Enter your Android Package Name
+   - Download the google-services.json file
+   - To convert to base64 for GitHub Actions:
+     ```sh
+     base64 -i google-services.json | pbcopy
+     ```
+
+5. **Firebase CLI Token**
+   - Install the Firebase CLI on your local machine:
+     ```sh
+     npm install -g firebase-tools
+     ```
+   - Log in to Firebase:
+     ```sh
+     firebase login
+     ```
+   - Generate a CI token:
+     ```sh
+     firebase login:ci
+     ```
+   - This will open a browser window for authentication and then display a token
+   - Copy this token for use in GitHub Actions and Azure DevOps
+
 ### GitHub Actions Secrets
 
-Add the following secrets to your GitHub repository:
+Add the following secrets to your GitHub repository (Settings > Secrets and variables > Actions > New repository secret):
 
 #### iOS Secrets
 - `IOS_P12_CERTIFICATE`: Base64-encoded p12 certificate
@@ -51,6 +171,7 @@ Add the following secrets to your GitHub repository:
 - `TEAM_ID`: Apple Developer Team ID
 - `IOS_BUNDLE_IDENTIFIER`: Bundle identifier for your iOS app
 - `APPLE_ID`: Apple ID email
+- `IOS_GOOGLE_SERVICE_INFO`: Base64-encoded GoogleService-Info.plist file
 
 #### Android Secrets
 - `GOOGLE_SERVICES_JSON`: Base64-encoded google-services.json file
@@ -59,12 +180,12 @@ Add the following secrets to your GitHub repository:
 - `ANDROID_KEY_ALIAS`: Key alias in the keystore
 - `ANDROID_KEY_PASSWORD`: Password for the key
 - `FIREBASE_APP_ID_ANDROID`: Firebase App ID for Android
-- `FIREBASE_SERVICE_ACCOUNT`: Firebase service account JSON content
+- `FIREBASE_CLI_TOKEN`: Firebase CLI token for authentication
 - `ANDROID_PACKAGE_NAME`: Package name for your Android app
 
 ### Azure DevOps Variable Group
 
-Create a variable group named `react-native-app-variables` with the following variables:
+Create a variable group named `react-native-app-variables` in Azure DevOps (Pipelines > Library > Variable groups > + Variable group):
 
 #### iOS Variables
 - `IOS_P12_CERTIFICATE_FILENAME`: Filename of the p12 certificate uploaded to Secure Files
@@ -77,6 +198,7 @@ Create a variable group named `react-native-app-variables` with the following va
 - `TEAM_ID`: Apple Developer Team ID
 - `IOS_BUNDLE_IDENTIFIER`: Bundle identifier for your iOS app
 - `APPLE_ID`: Apple ID email
+- `IOS_GOOGLE_SERVICE_INFO_FILENAME`: Filename of the GoogleService-Info.plist file uploaded to Secure Files
 
 #### Android Variables
 - `GOOGLE_SERVICES_JSON_FILENAME`: Filename of the google-services.json file uploaded to Secure Files
@@ -85,18 +207,18 @@ Create a variable group named `react-native-app-variables` with the following va
 - `ANDROID_KEY_ALIAS`: Key alias in the keystore
 - `ANDROID_KEY_PASSWORD`: Password for the key
 - `FIREBASE_APP_ID_ANDROID`: Firebase App ID for Android
-- `FIREBASE_SERVICE_ACCOUNT_FILENAME`: Filename of the Firebase service account JSON file uploaded to Secure Files
+- `FIREBASE_CLI_TOKEN`: Firebase CLI token for authentication
 - `ANDROID_PACKAGE_NAME`: Package name for your Android app
 
 ### Azure DevOps Secure Files
 
-Upload the following files to Azure DevOps Secure Files:
+Upload the following files to Azure DevOps Secure Files (Pipelines > Library > Secure files > + Secure file):
 
-1. iOS p12 certificate
-2. iOS provisioning profile
-3. Android keystore
-4. google-services.json
-5. Firebase service account JSON
+1. iOS p12 certificate (the .p12 file you exported from Keychain Access)
+2. iOS provisioning profile (the .mobileprovision file you downloaded from Apple Developer portal)
+3. Android keystore (the .keystore file you created)
+4. google-services.json (downloaded from Firebase console for Android)
+5. GoogleService-Info.plist (downloaded from Firebase console for iOS)
 
 ## Running the Pipelines
 

@@ -136,11 +136,9 @@ stages:
               echo "keyPassword=$(ANDROID_KEY_PASSWORD)" >> android/keystore.properties
             displayName: 'Setup Android signing'
 
-          - task: DownloadSecureFile@1
-            name: firebaseServiceAccount
-            inputs:
-              secureFile: '$(FIREBASE_SERVICE_ACCOUNT_FILENAME)'
-            displayName: 'Download Firebase service account'
+          - script: |
+              npm install -g firebase-tools
+            displayName: 'Install Firebase CLI'
 
           - script: |
               cd android
@@ -153,5 +151,5 @@ stages:
               ANDROID_KEY_ALIAS: '$(ANDROID_KEY_ALIAS)'
               ANDROID_KEY_PASSWORD: '$(ANDROID_KEY_PASSWORD)'
               FIREBASE_APP_ID_ANDROID: '$(FIREBASE_APP_ID_ANDROID)'
-              FIREBASE_SERVICE_ACCOUNT_PATH: '$(firebaseServiceAccount.secureFilePath)'
+              FIREBASE_CLI_TOKEN: '$(FIREBASE_CLI_TOKEN)'
             displayName: 'Build and deploy to App Tester'
