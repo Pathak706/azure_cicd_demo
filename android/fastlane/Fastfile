@@ -38,7 +38,34 @@ platform :android do
     )
 
     # Upload to Firebase App Distribution using Firebase CLI
-    sh("firebase appdistribution:distribute app/build/outputs/apk/release/app-release.apk \
+    # Use the full path to the APK file
+    apk_path = File.join(Dir.pwd, "app/build/outputs/apk/release/app-release.apk")
+    puts "APK path: #{apk_path}"
+
+    # Check if the APK file exists
+    unless File.exist?(apk_path)
+      UI.error("APK file not found at path: #{apk_path}")
+      UI.error("Current directory: #{Dir.pwd}")
+      UI.error("Directory contents: #{Dir.entries(Dir.pwd)}")
+
+      # Try to find the APK file in a different location
+      possible_paths = [
+        "app/build/outputs/apk/release/app-release.apk",
+        "../app/build/outputs/apk/release/app-release.apk",
+        "build/outputs/apk/release/app-release.apk",
+        "../build/outputs/apk/release/app-release.apk"
+      ]
+
+      possible_paths.each do |path|
+        if File.exist?(path)
+          UI.success("Found APK at: #{path}")
+          apk_path = path
+          break
+        end
+      end
+    end
+
+    sh("firebase appdistribution:distribute \"#{apk_path}\" \
       --app \"#{ENV["FIREBASE_APP_ID_ANDROID"]}\" \
       --testers \"#{ENV["FIREBASE_TESTERS"]}\" \
       --release-notes \"New beta build\" \
