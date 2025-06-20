@@ -83,9 +83,9 @@ android {
     ndkVersion rootProject.ext.ndkVersion
     compileSdk rootProject.ext.compileSdkVersion
 
-    namespace "com.azure_cicd_demo"
+    namespace "net.techconsulting.rn_cicd_demo"
     defaultConfig {
-        applicationId "com.azure_cicd_demo"
+        applicationId "net.techconsulting.rn_cicd_demo"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
