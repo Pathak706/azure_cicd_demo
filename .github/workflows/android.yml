@@ -93,6 +93,6 @@ jobs:
         with:
           appId: ${{ secrets.FIREBASE_APP_ID_ANDROID }}
           token: ${{ secrets.FIREBASE_CLI_TOKEN }}
-          groups: testers
+          testers: ${{ secrets.FIREBASE_TESTERS }}
           file: android/app/build/outputs/apk/release/app-release.apk
           releaseNotes: "New build from GitHub Actions"

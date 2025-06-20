@@ -181,6 +181,7 @@ Add the following secrets to your GitHub repository (Settings > Secrets and vari
 - `ANDROID_KEY_PASSWORD`: Password for the key
 - `FIREBASE_APP_ID_ANDROID`: Firebase App ID for Android
 - `FIREBASE_CLI_TOKEN`: Firebase CLI token for authentication
+- `FIREBASE_TESTERS`: Comma-separated list of tester email addresses for Firebase App Distribution (e.g., "user1@example.com,user2@example.com")
 - `ANDROID_PACKAGE_NAME`: Package name for your Android app
 
 ### Azure DevOps Variable Group
@@ -208,6 +209,7 @@ Create a variable group named `react-native-app-variables` in Azure DevOps (Pipe
 - `ANDROID_KEY_PASSWORD`: Password for the key
 - `FIREBASE_APP_ID_ANDROID`: Firebase App ID for Android
 - `FIREBASE_CLI_TOKEN`: Firebase CLI token for authentication
+- `FIREBASE_TESTERS`: Comma-separated list of tester email addresses for Firebase App Distribution (e.g., "user1@example.com,user2@example.com")
 - `ANDROID_PACKAGE_NAME`: Package name for your Android app
 
 ### Azure DevOps Secure Files

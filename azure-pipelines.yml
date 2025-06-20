@@ -152,4 +152,5 @@ stages:
               ANDROID_KEY_PASSWORD: '$(ANDROID_KEY_PASSWORD)'
               FIREBASE_APP_ID_ANDROID: '$(FIREBASE_APP_ID_ANDROID)'
               FIREBASE_CLI_TOKEN: '$(FIREBASE_CLI_TOKEN)'
+              FIREBASE_TESTERS: '$(FIREBASE_TESTERS)'
             displayName: 'Build and deploy to App Tester'

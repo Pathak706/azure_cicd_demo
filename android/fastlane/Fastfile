@@ -40,7 +40,7 @@ platform :android do
     # Upload to Firebase App Distribution using Firebase CLI
     sh("firebase appdistribution:distribute app/build/outputs/bundle/release/app-release.aab \
       --app #{ENV["FIREBASE_APP_ID_ANDROID"]} \
-      --groups testers \
+      --testers #{ENV["FIREBASE_TESTERS"]} \
       --release-notes \"New beta build\" \
       --token \"#{ENV["FIREBASE_CLI_TOKEN"]}\"")
 
