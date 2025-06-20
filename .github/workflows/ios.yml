@@ -1,66 +1,119 @@
-#name: iOS Build and Deploy
-#
-#on:
-#  push:
-#    branches: [ main ]
-#  pull_request:
-#    branches: [ main ]
-#  workflow_dispatch:
-#
-#jobs:
-#  build:
-#    name: Build and Deploy iOS
-#    runs-on: macos-latest
-#
-#    steps:
-#      - name: Checkout code
-#        uses: actions/checkout@v3
-#
-#      - name: Setup Node.js
-#        uses: actions/setup-node@v3
-#        with:
-#          node-version: '18'
-#          cache: 'npm'
-#
-#      - name: Install dependencies
-#        run: |
-#          npm ci
-#          cd ios && pod install
-#
-#      - name: Setup Ruby
-#        uses: ruby/setup-ruby@v1
-#        with:
-#          ruby-version: '3.0'
-#          bundler-cache: true
-#
-#      - name: Install Fastlane
-#        run: gem install fastlane
-#
-#      - name: Setup iOS certificates and provisioning profiles
-#        uses: apple-actions/import-codesign-certs@v1
-#        with:
-#          p12-file-base64: ${{ secrets.IOS_P12_CERTIFICATE }}
-#          p12-password: ${{ secrets.IOS_P12_PASSWORD }}
-#          keychain-password: ${{ secrets.KEYCHAIN_PASSWORD }}
-#          keychain: signing_temp
-#          create-keychain: true
-#
-#      - name: Setup provisioning profile
-#        run: |
-#          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
-#          echo "${{ secrets.IOS_PROVISIONING_PROFILE }}" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/profile.mobileprovision
-#
-#      - name: Setup Firebase configuration
-#        run: |
-#          echo "${{ secrets.IOS_GOOGLE_SERVICE_INFO }}" | base64 --decode > ios/GoogleService-Info.plist
-#
-#      - name: Build and deploy to TestFlight
-#        env:
-#          APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
-#          APP_STORE_CONNECT_API_KEY_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ISSUER_ID }}
-#          APP_STORE_CONNECT_API_KEY_CONTENT: ${{ secrets.APP_STORE_CONNECT_API_KEY_CONTENT }}
-#          TEAM_ID: ${{ secrets.TEAM_ID }}
-#          BUNDLE_IDENTIFIER: ${{ secrets.IOS_BUNDLE_IDENTIFIER }}
-#        run: |
-#          cd ios
-#          fastlane beta
+name: iOS Build and Deploy
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build and Deploy iOS
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Clean node_modules and reinstall
+        run: |
+          rm -rf node_modules
+          npm ci
+
+      - name: Install CocoaPods
+        run: |
+          cd ios && pod install
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.0'
+          bundler-cache: true
+
+      - name: Install Fastlane
+        run: gem install fastlane
+
+      # For demo purposes, we'll create a mock Firebase configuration
+      - name: Setup mock Firebase configuration
+        run: |
+          echo '<?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>API_KEY</key>
+            <string>demo-api-key</string>
+            <key>GCM_SENDER_ID</key>
+            <string>demo-sender-id</string>
+            <key>PLIST_VERSION</key>
+            <string>1</string>
+            <key>BUNDLE_ID</key>
+            <string>net.techconsulting.rn_cicd_demo</string>
+            <key>PROJECT_ID</key>
+            <string>demo-project</string>
+            <key>STORAGE_BUCKET</key>
+            <string>demo-bucket.appspot.com</string>
+            <key>IS_ADS_ENABLED</key>
+            <false></false>
+            <key>IS_ANALYTICS_ENABLED</key>
+            <false></false>
+            <key>IS_APPINVITE_ENABLED</key>
+            <true></true>
+            <key>IS_GCM_ENABLED</key>
+            <true></true>
+            <key>IS_SIGNIN_ENABLED</key>
+            <true></true>
+            <key>GOOGLE_APP_ID</key>
+            <string>1:1234567890:ios:abcdef1234567890</string>
+          </dict>
+          </plist>' > ios/GoogleService-Info.plist
+
+      - name: Update app version
+        run: |
+          # Get version from package.json
+          VERSION=$(node -p "require('./package.json').version")
+          echo "Using version from package.json: $VERSION"
+
+          # Get current build number from Info.plist
+          CURRENT_BUILD_NUMBER=$(defaults read $(pwd)/ios/azure_cicd_demo/Info.plist CFBundleVersion || echo "1")
+          NEW_BUILD_NUMBER=$((CURRENT_BUILD_NUMBER + 1))
+          echo "Incrementing build number from $CURRENT_BUILD_NUMBER to $NEW_BUILD_NUMBER"
+
+          # Update version and build number in Info.plist
+          plutil -replace CFBundleShortVersionString -string "$VERSION" ios/azure_cicd_demo/Info.plist
+          plutil -replace CFBundleVersion -string "$NEW_BUILD_NUMBER" ios/azure_cicd_demo/Info.plist
+
+          echo "Updated Info.plist with new version information"
+
+      - name: Build iOS app (Demo mode)
+        run: |
+          cd ios
+          # For demo purposes, we'll just run a partial build that doesn't require signing
+          xcodebuild -workspace azure_cicd_demo.xcworkspace -scheme azure_cicd_demo -configuration Debug -sdk iphonesimulator -derivedDataPath build
+
+      - name: Create demo IPA file
+        run: |
+          # For demo purposes, create a dummy IPA file
+          cd ios/build
+          mkdir -p Payload
+          cp -R Debug-iphonesimulator/azure_cicd_demo.app Payload/
+          zip -r azure_cicd_demo.ipa Payload
+          echo "Created demo IPA file"
+
+      - name: Upload IPA as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-app-demo
+          path: ios/build/azure_cicd_demo.ipa
+          retention-days: 5
+
+      - name: Demo TestFlight upload (skipped)
+        run: |
+          echo "In a real environment with Apple Developer credentials, the app would be uploaded to TestFlight here."
+          echo "For this demo, we've created and uploaded the IPA as an artifact instead."
