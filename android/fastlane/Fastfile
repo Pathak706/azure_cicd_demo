@@ -18,8 +18,11 @@ default_platform(:android)
 platform :android do
   desc "Build and deploy to Firebase App Tester"
   lane :beta do
-    # Ensure that your git status is not dirty
-    ensure_git_status_clean
+    # Skip git status check in CI environment
+    unless ENV['CI'] || ENV['AZURE_DEVOPS']
+      # Ensure that your git status is not dirty (only in local development)
+      ensure_git_status_clean
+    end
 
     # Skip version code increment as it's now handled in the CI pipeline
 
@@ -41,10 +44,12 @@ platform :android do
       --release-notes \"New beta build\" \
       --token \"#{ENV["FIREBASE_CLI_TOKEN"]}\"")
 
-    # Commit the version bump
-    git_commit(
-      path: ["app/build.gradle"],
-      message: "Bump version code [skip ci]"
-    )
+    # Commit the version bump (only in local development)
+    unless ENV['CI'] || ENV['AZURE_DEVOPS']
+      git_commit(
+        path: ["app/build.gradle"],
+        message: "Bump version code [skip ci]"
+      )
+    end
   end
 end

@@ -187,6 +187,7 @@ stages:
               FIREBASE_APP_ID_ANDROID: '$(FIREBASE_APP_ID_ANDROID)'
               FIREBASE_CLI_TOKEN: '$(FIREBASE_CLI_TOKEN)'
               FIREBASE_TESTERS: '$(FIREBASE_TESTERS)'
+              AZURE_DEVOPS: 'true'
             displayName: 'Build and deploy to App Tester'
 
           - script: |
