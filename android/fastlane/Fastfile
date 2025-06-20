@@ -28,7 +28,7 @@ platform :android do
 
     # Build the Android app (both AAB and APK)
     gradle(
-      task: "clean bundleRelease assembleRelease",
+      task: "bundleRelease assembleRelease",
       properties: {
         "android.injected.signing.store.file" => ENV["ANDROID_KEYSTORE_PATH"],
         "android.injected.signing.store.password" => ENV["ANDROID_KEYSTORE_PASSWORD"],
@@ -38,7 +38,7 @@ platform :android do
     )
 
     # Upload to Firebase App Distribution using Firebase CLI
-    sh("firebase appdistribution:distribute app/build/outputs/bundle/release/app-release.aab \
+    sh("firebase appdistribution:distribute app/build/outputs/apk/release/app-release.apk \
       --app #{ENV["FIREBASE_APP_ID_ANDROID"]} \
       --testers #{ENV["FIREBASE_TESTERS"]} \
       --release-notes \"New beta build\" \
